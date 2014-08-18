@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="10dip" >
+
+    <TextView
+        android:id="@+id/log_text_view"
+        android:layout_width="fill_parent"
+        android:layout_height="240dp"
+        android:layout_margin="10dip"
+        android:layout_weight="0.61"
+        android:background="@android:color/white"
+        android:focusableInTouchMode="true"
+        android:freezesText="true"
+        android:maxWidth="400dp"
+        android:padding="5dip"
+        android:text="Log entries will appear here"
+        android:typeface="monospace" />
+
+    <LinearLayout
+        android:layout_width="376dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/btnUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onScrollUpClick"
+            android:text="@string/up" />
+
+        <Button
+            android:id="@+id/btnDown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onScrollDownClick"
+            android:text="@string/down" />
+
+        <Button
+            android:id="@+id/btnTop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onScrollTopClick"
+            android:text="@string/top" />
+
+        <Button
+            android:id="@+id/btnBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onScrollBottomClick"
+            android:text="@string/bottom" />
+
+        <Button
+            android:id="@+id/btnClear"
+            style="android:button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/ic_delete"
+            android:onClick="onClearLogClick"
+            android:text="C" />
+
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/keep_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.07"
+        android:onClick="onKeepLogsThroughSessionClick"
+        android:text="Keep logs through sessions (slow!)" />
+
+</LinearLayout>

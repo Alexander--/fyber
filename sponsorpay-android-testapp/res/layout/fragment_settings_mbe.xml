@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mbe_linear_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="10dp"
+    android:paddingTop="10dp" >
+    
+    <include layout="@layout/abstract_fragment_settings_menubar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/settings_menu_bottom_margin"/>
+    
+	<Button
+    android:id="@+id/mbe_request_offers"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/request_offers" />
+	
+	<Button
+	    android:id="@+id/mbe_start"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:enabled="false"
+	    android:text="@string/start_mbe" />
+	
+	<CheckBox 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/mbe_add_vcs_listener_checkbox"
+		android:text="@string/mbe_vcs_query"
+	    />
+	
+	<CheckBox 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/mbe_show_notification_checkbox"
+		android:text="@string/mbe_show_reward_notification"
+	    />
+	<!-- 
+	<LinearLayout
+		android:id="@+id/banner_container"
+		android:layout_width="fill_parent"
+		android:layout_height="75dp"
+		android:layout_marginBottom="8dp"
+		android:layout_marginTop="8dp" />
+	 -->
+    
+</LinearLayout>

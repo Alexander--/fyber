@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:padding="15dp" >
+        
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onLaunchOfferwallClick"
+        android:text="@string/launch_offerwall" />   
+    
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onRequestNewCoinsClick"
+        android:text="@string/request_new_coins" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onActionsClick"
+        android:text="@string/actions" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onMBEClick"
+        android:text="@string/mbe" />
+    
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onInterstitialClick"
+        android:text="@string/interstitial" />
+    
+    <Button
+        android:id="@+id/video_mock_mediation_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onVideoMockMediationClick"
+        android:text="@string/video_mock_mediation_settings" />
+    
+    <Button
+        android:id="@+id/interstitial_mock_mediation_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onInterstitialMockMediationClick"
+        android:text="@string/interstitial_mock_mediation_settings" />
+    
+    <Button
+        android:id="@+id/mediation_settings_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onMockMediationSettingsClick"
+        android:text="@string/mediation_settings" />
+
+</LinearLayout>

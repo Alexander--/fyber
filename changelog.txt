@@ -1,0 +1,142 @@
+*** SponsorPay SDK change log ***
+
+6.1.2 ----------------------------------------------------------------------
+
+* Full switch to Google Advertising ID
+* Minor improvements
+
+6.1.0 ----------------------------------------------------------------------
+
+Mediation - added better logging of any issue while loading adapter related files
+Fixed potential bugs in BrandEngage:
+* checking for Virtual Currency listener when performing the request
+* SPBrandEngageRequestListener.onSPBrandEngageOffersNotAvailable is now called 
+when a timeout occurs. 
+
+6.0.0 ----------------------------------------------------------------------
+
+* Added support for remote mediation configuration files
+* Added support for Android Play Services Advertising ID
+* Improved performance in URL generation (not performed in the main thread anymore)
+* Major internal refactoring
+
+
+5.0.1 ----------------------------------------------------------------------
+
+Fixed issues in BrandEngage:
+* Leaked intent receiver is now unregistered
+* Potential issue with a video still playing when the back button was pressed 
+
+5.0.0 ----------------------------------------------------------------------
+
+Fixed potential issues with Android 4.2
+* all WebView load url requests are now performed inside the UI thread
+Major refactoring:
+* New and safer mechanism to handle WebView loading timeouts
+* New package declaration for the Offer Wall
+
+4.0.1 ----------------------------------------------------------------------
+
+Fixed a potential crash in BrandEngage client adding error handling in when showing a dialog.
+
+4.0.0 ----------------------------------------------------------------------
+
+Retired:
+ * Mobile Banners 
+ * Mobile Unlock Offer Wall
+ * Mobile Interstitial
+Reduced timeout for VCS polling after a successful mBE engagement
+Other minor bug fixes related to mBE error dialogs
+
+3.0.2 ----------------------------------------------------------------------
+
+Corrected issue that prevent SponsorPay URL to be loaded correctly in some cases.
+
+3.0.1 ----------------------------------------------------------------------
+
+Minor bug fix using thread safe client HTTP connection manager.
+
+3.0.0 ----------------------------------------------------------------------
+
+Added SponsorPay Mobile BrandEngage support.
+
+2.0.0 ----------------------------------------------------------------------
+
+Added SponsorPay start method and support for Rewarded Actions.
+
+Other small improvements and bug fixes.
+
+1.9.0 ----------------------------------------------------------------------
+
+Added Unlock Item Name to Unlock OfferWall. Added screen size and screen density parameters to some publisher requests. Added error handling for exceptions triggered by the non-availability of the Play Store or other Intent handlers necessary to follow an offer link.
+
+1.8.3 ----------------------------------------------------------------------
+
+Corrected issue by which the ID of the map of unlock items returned by the server would have the item names instead of the item IDs as its keys.
+
+1.8.2 ----------------------------------------------------------------------
+
+Added auto-generable user ID.
+
+Fixed a potential crash by adding check for null cookies on the Interstitial request.
+
+1.8.1 ----------------------------------------------------------------------
+
+Added SponsorPay Unlock feature.
+
+1.8.0 ----------------------------------------------------------------------
+
+Added new SubID tracking feature.
+
+1.7.0 ----------------------------------------------------------------------
+
+The vertical scrollbar on the mobile OfferWall and Interstitial is hidden when the user is not scrolling, not taking any fixed amount of screen real state anymore.
+
+Added an HTTP Accept-Language header to the AsyncRequest class, based on the current locale and defaulting to English. This fixes an issue which could ocassionally prevent the Interstitial and Offer Banners to be returned in the right locale.
+
+Changed Interstitial activity to be floating. Interstitial size border width are now determined as a function of whether the host's device screen is bigger or smaller than a "tablet threshold". Actual width in pixels is calculated taken screen density into account.
+
+Other smaller improvements.
+
+1.5.1 ----------------------------------------------------------------------
+
+Further refactored to avoid code duplication.
+
+1.5.0 ----------------------------------------------------------------------
+
+Added Mobile Banners feature.
+Refactored the WebViewClient used to detect and act on the SponsorPay schema into its own class hierarchy to avoid code duplication.
+
+1.4.0 ----------------------------------------------------------------------
+
+Last VCS transaction ID is now saved independently for each App ID / User ID pair.
+
+1.3.1 ----------------------------------------------------------------------
+
+Fixed an issue which would prevent the right android_id from being fetched from the device.
+
+
+1.3.0 ----------------------------------------------------------------------
+
+Unified Advertiser and Publisher SDKs into a single one.
+Removed references to Offer ID and Program ID. Now the advertiser callback is performed using App ID.
+App ID can now be alphanumeric.
+Modified the behavior of the advertiser callback, now it is always sent, albeit with a parameter which indicates whether it has been successful before for a given install.
+
+1.2.0 ----------------------------------------------------------------------
+
+Added parameters android_id and mac_address (for which the WiFi MAC address is fetched) to the advertiser callback request.
+
+
+1.1.1 ----------------------------------------------------------------------
+
+Added the parameter sdk_version=[release version] to the advertiser callback request.
+
+
+1.1.0 ----------------------------------------------------------------------
+
+Changed the default to expect a SPONSORPAY_PROGRAM_ID in the Manifest. The SDK will use this value to fill the program_id parameter in the callback URL.
+
+Added a switch that changes the parameter name in the callback URL to offer_id (SponsorPayAdvertiser.setShouldUseOfferId(boolean value) ). However, in the manifest the parameter is now called SPONSORPAY_PROGRAM_ID regardless of this setting in order to simplify the integration.
+
+The manifest parameter SPONSORPAY_OFFER_ID is no longer in use.

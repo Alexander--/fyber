@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.sponsorpay.sdk.android.testapp"
+    android:versionCode="66"
+    android:versionName="6.0.0" >
+
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="19"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+   
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:allowBackup="false" >
+
+        <meta-data android:name="beta" android:value="true"></meta-data>
+        <meta-data android:name="com.crashlytics.ApiKey" android:value="043fee630558deebb1ef35b008b2ac7da41454b6"/>
+        
+        <meta-data android:name="applovin.sdk.key" 
+            android:value="XKRiiK6KGT0lozW5QhDtTXPBcL0mm5lIQA07U6SmfSVRQ1XskliCH6NuSNdCTNUuTV01bSoGwIhKJEA2-uEF_b"  />
+       
+        <meta-data android:name="applovin.sdk.verbose_logging"
+            android:value="true" />
+            
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />    
+
+        <activity
+            android:label="@string/app_name"
+            android:configChanges="orientation|screenSize"
+            android:name=".SponsorpayAndroidTestAppActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".MainSettingsActivity" android:label="Settings"></activity>
+
+        <activity
+            android:configChanges="orientation"
+            android:name="com.sponsorpay.publisher.ofw.SPOfferWallActivity" />
+
+        <activity
+            android:configChanges="screenSize|orientation"
+            android:name="com.sponsorpay.publisher.mbe.SPBrandEngageActivity"
+            android:hardwareAccelerated="true"/>
+
+        <activity
+            android:configChanges="screenSize|orientation"
+            android:name="com.sponsorpay.publisher.interstitial.SPInterstitialActivity"
+            android:theme="@android:style/Theme.Translucent"/>
+        
+		
+    </application>
+
+</manifest>
+
