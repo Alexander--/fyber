@@ -16,9 +16,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Window;
 import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.sponsorpay.SponsorPay;
@@ -127,8 +129,7 @@ public class SPOfferWallActivity extends Activity {
 		setContentView(mWebView);
 
 		mWebView.getSettings().setJavaScriptEnabled(true);
-                        SPWebViewSettings.enablePlugins(mWebView.getSettings());
-
+        SPWebViewSettings.enablePlugins(mWebView.getSettings());
 		mActivityOfferWebClient = new ActivityOfferWebClient(SPOfferWallActivity.this,
 				mShouldStayOpen);
 

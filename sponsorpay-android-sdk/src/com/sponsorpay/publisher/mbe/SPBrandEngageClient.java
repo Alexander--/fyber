@@ -580,11 +580,10 @@ public class SPBrandEngageClient {
 		mContext = Build.VERSION.SDK_INT < 11 ? activity : activity.getApplicationContext();
 		
 		mWebView = new WebView(mContext);
-		
-                WebSettings webSettings = mWebView.getSettings();
 
+        WebSettings webSettings = mWebView.getSettings();
+		mWebView.getSettings().setJavaScriptEnabled(true);
                 SPWebViewSettings.enablePlugins(webSettings);
-                webSettings.setJavaScriptEnabled(true);
                 webSettings.setUseWideViewPort(false);
 		
 		mWebView.setBackgroundColor(0);
