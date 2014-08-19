@@ -29,13 +29,11 @@ android {
 
     buildTypes {
         debug {
-            runProguard true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), file('proguard.cfg')
+            runProguard false
         }
 
         release {
-            runProguard true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), file('proguard.cfg')
+            runProguard false
         }
     }
 

@@ -8,6 +8,8 @@ package com.sponsorpay.publisher.ofw;
 
 import android.app.Activity;
 import android.net.Uri;
+import android.net.http.SslError;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
 
 import com.sponsorpay.publisher.SponsorPayPublisher;
@@ -88,5 +90,9 @@ public class ActivityOfferWebClient extends SPWebClient {
 		}
 		showDialog(SponsorPayPublisher.getUIString(error));
 	}
-	
+
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.proceed(); // Ignore SSL certificate errors
+    }
 }

@@ -47,7 +47,7 @@ public class SponsorPay {
         public static final int BUGFIX_RELEASE_NUMBER = 0;
 	public static final String RELEASE_VERSION_STRING = MAJOR_RELEASE_NUMBER + "." + 
 				MINOR_RELEASE_NUMBER + "." + BUGFIX_RELEASE_NUMBER;
-	
+
         public static final String TAG = "SponsorPay";
         
 	protected static SponsorPay INSTANCE = new SponsorPay();
@@ -55,7 +55,6 @@ public class SponsorPay {
 	private HashMap<String, SPCredentials> tokensMap = new HashMap<String, SPCredentials>();
 	
 	private SPCredentials currentCredentials;
-	private HostInfo mHostInfo;
 	
 	protected SponsorPay() {
                 SponsorPayParametersProvider.addParametersProvider(new SDKFeaturesProvider());
@@ -70,7 +69,7 @@ public class SponsorPay {
 		return credendials;
 	}
 	
-	protected String getCredentialsToken(String appId, String userId,
+	public String getCredentialsToken(String appId, String userId,
 			String securityToken, Context context) {
 		SPCredentials credentials;
 		
