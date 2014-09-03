@@ -11,8 +11,6 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import android.Manifest;
 import android.content.Context;
@@ -25,7 +23,6 @@ import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Surface;
@@ -78,7 +75,6 @@ public class HostInfo {
 	private String mLanguageSetting;
 
 	private String mAdvertisingId;
-	
 	private boolean mAdvertisingIdLimitedTrackingEnabled = true;
 
 	private DisplayMetrics mDisplayMetrics;
@@ -112,19 +108,8 @@ public class HostInfo {
 		if (context == null) {
 			throw new RuntimeException("A context is required to initialize HostInfo");
 		}
-		
-		// check if we're running in the main thread
-		if (Looper.myLooper() == Looper.getMainLooper()) {
-			new Thread("AdvertisingIdRetriever") {
-				public void run() {
-					retrieveAdvertisingId(context);
-				};
-			}.start();
-		} else {
-			retrieveAdvertisingId(context);
-		}
 
-		retrieveTelephonyManagerValues(context);
+        retrieveTelephonyManagerValues(context);
 		retrieveAccessNetworkValues(context);
 		retrieveDisplayMetrics(context);
 		retrieveAppVersion(context);
@@ -232,47 +217,24 @@ public class HostInfo {
 	public String getLanguageSetting() {
 		return mLanguageSetting;
 	}
-
 	
-	private CountDownLatch mIdLatch = new CountDownLatch(1);
-
 	private String mBundleName;
 	
         private List<String> mProviders;
-        
 
-	protected void retrieveAdvertisingId(Context context) {
-		try {
-			//calling this reflexively, in case of Play Services not linked with the application
-			Class<?> advertisingIdClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-				
-			Method getAdInfoMethod = advertisingIdClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-			Object adInfo = getAdInfoMethod.invoke(null, context);
-			
-			Method getIdMethod = adInfo.getClass().getMethod("getId");
-			Method isLimitAdTrackingEnabledMethod = adInfo.getClass().getMethod("isLimitAdTrackingEnabled");
-			
-			mAdvertisingId = getIdMethod.invoke(adInfo).toString();
-			mAdvertisingIdLimitedTrackingEnabled = (Boolean)isLimitAdTrackingEnabledMethod.invoke(adInfo);
-			
-		} catch (Exception e) {
-			SponsorPayLogger.e(TAG, e.getLocalizedMessage(), e);
-		}
-		mIdLatch.countDown();
-	}
 
 	public String getAdvertisingId() {
-		try {
-			mIdLatch.await(5, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			//do nothing
-		}
 		return mAdvertisingId;
 	}
 
 	public Boolean isAdvertisingIdLimitedTrackingEnabled() {
 		return mAdvertisingIdLimitedTrackingEnabled;
 	}
+
+    public void setAdvertisingId(String adId, boolean limitedTrackingEnabled) {
+        mAdvertisingId = adId;
+        mAdvertisingIdLimitedTrackingEnabled = limitedTrackingEnabled;
+    }
 	
         public String getScreenOrientation() {
                 String[] values = { "portrait", "landscape", "portrait", "landscape", "portrait" };
