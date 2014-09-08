@@ -76,12 +76,12 @@ public abstract class AbstractCallbackSender extends AsyncTask<String, Void, Boo
 	/**
 	 * Triggers the callback request that contacts the SponsorPay Advertiser API.
 	 */
-	public void trigger() {
+	public AsyncTask trigger() {
 		// The final URL with parameters is built right away, to make sure that possible runtime
 		// exceptions triggered from the SDK to the integrator's code --due to a missing App ID
 		// value or to an invalid collection of custom parameters-- are triggered on the calling
 		// thread.
-		execute((String[])null);
+		return execute((String[])null);
 	}
 
 	private String buildUrl() {

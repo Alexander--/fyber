@@ -11,6 +11,7 @@ import java.util.Map;
 import android.content.Context;
 import android.util.Log;
 
+import android.os.AsyncTask;
 import com.sponsorpay.SponsorPay;
 import com.sponsorpay.credentials.SPCredentials;
 import com.sponsorpay.utils.HostInfo;
@@ -74,13 +75,13 @@ public class SponsorPayAdvertiser {
 	 * @param customParams
 	 *            A map of extra key/value pairs to add to the request URL.
 	 */
-	private void register(String credentialsToken, Map<String, String> customParams) {
+	private AsyncTask register(String credentialsToken, Map<String, String> customParams) {
 		SPCredentials credentials = SponsorPay.getCredentials(credentialsToken);
 		
 		/* Send asynchronous call to SponsorPay's API */
 		InstallCallbackSender callback = new InstallCallbackSender(credentials, mPersistedState);
 		callback.setCustomParams(customParams);
-		callback.trigger();
+		return callback.trigger();
 	}
 	
 	private void notitfyActionCompletion(String credentialsToken, String actionId, Map<String, String> customParams) {
@@ -159,8 +160,8 @@ public class SponsorPayAdvertiser {
 	 * @param context
 	 *            Host application context.
 	 */
-	public static void register(Context context) {
-		register(context, (Map<String, String>)null);
+	public static AsyncTask register(Context context) {
+		return register(context, (Map<String, String>)null);
 	}
 	
 	/**
@@ -171,9 +172,9 @@ public class SponsorPayAdvertiser {
 	 * @param customParams
 	 *            A map of extra key/value pairs to add to the request URL.
 	 */
-	public static void register(Context context, Map<String, String> customParams) {
+	public static AsyncTask register(Context context, Map<String, String> customParams) {
 		String credentialsToken = SponsorPay.getCurrentCredentials().getCredentialsToken();
-		register(credentialsToken, context, customParams);
+		return register(credentialsToken, context, customParams);
 	}
 
 	/**
@@ -186,19 +187,11 @@ public class SponsorPayAdvertiser {
 	 * @param customParams
 	 *            A map of extra key/value pairs to add to the request URL.
 	 */
-	public static void register(String credentialsToken, Context context, Map<String, String> customParams) {
-        getInstance(context);
+	public static AsyncTask register(String credentialsToken, Context context, Map<String, String> customParams) {
+		getInstance(context);
 		
 		// The actual work is performed by the register() instance method.
-		mInstance.register(credentialsToken, customParams);
-        }
-
-        private static void outputLogMessage() {
-                if (SponsorPayLogger.isLogging()) {
-                        SponsorPayLogger.i(TAG, "Only devices running Android API level 10 and above are supported");
-                } else {
-                        Log.i(TAG, "Only devices running Android API level 10 and above are supported");
-                }
+		return mInstance.register(credentialsToken, customParams);
 	}
 	
 }
