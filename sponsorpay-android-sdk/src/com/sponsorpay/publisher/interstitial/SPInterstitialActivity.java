@@ -6,6 +6,8 @@
 
 package com.sponsorpay.publisher.interstitial;
 
+import com.sponsorpay.mediation.SPMediationUserActivityListener;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -25,6 +27,9 @@ public class SPInterstitialActivity extends Activity implements SPInterstitialAd
 
 	public final static String SP_ERROR_MESSAGE = "ERROR_MESSAGE";
 	
+        private SPMediationUserActivityListener mActivityListener;
+
+        
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -56,5 +61,28 @@ public class SPInterstitialActivity extends Activity implements SPInterstitialAd
 		setResult(RESULT_OK, intent);
 		finish();
 	}
+
+        public void setMarketPlaceInterstitialListener(SPMediationUserActivityListener listener) {
+                if(mActivityListener == null){
+                        mActivityListener = listener;
+                }
+    }
+
+        @Override
+        protected void onUserLeaveHint() {
+                if (mActivityListener != null) {
+                        mActivityListener.notifyOnHomePressed();
+                }
+                super.onUserLeaveHint();
+        }
+        
+        
+        @Override
+        public void onBackPressed() {
+                if (mActivityListener != null) {
+                        mActivityListener.notifyOnBackPressed();
+                }
+                super.onBackPressed();
+        }
 
 }

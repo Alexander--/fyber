@@ -9,11 +9,14 @@ package com.sponsorpay.advertiser;
 import java.util.Map;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.sponsorpay.SponsorPay;
 import com.sponsorpay.credentials.SPCredentials;
+import com.sponsorpay.utils.HostInfo;
 import com.sponsorpay.utils.SPIdException;
 import com.sponsorpay.utils.SPIdValidator;
+import com.sponsorpay.utils.SponsorPayLogger;
 
 /**
  * <p>
@@ -27,6 +30,8 @@ import com.sponsorpay.utils.SPIdValidator;
  * </p>
  */
 public class SponsorPayAdvertiser {
+
+        private static final String TAG = "SponsorPayAdvertiser";
 
 	/**
 	 * Keep track of the persisted state of the Advertiser part of the SDK
@@ -135,7 +140,7 @@ public class SponsorPayAdvertiser {
 			throw new RuntimeException("The provided Action ID is not valid. "
 					+ e.getLocalizedMessage());
 		}
-		// The actual work is performed by the notitfyActionCompletion() instance method.
+        // The actual work is performed by the notitfyActionCompletion() instance method.
 		//mInstance has to exist so we can have a credentialsToken, anyway, shielding it
 		if (mInstance == null) {
 			throw new RuntimeException("No valid credentials object was created yet.\n" +
@@ -182,10 +187,18 @@ public class SponsorPayAdvertiser {
 	 *            A map of extra key/value pairs to add to the request URL.
 	 */
 	public static void register(String credentialsToken, Context context, Map<String, String> customParams) {
-		getInstance(context);
+        getInstance(context);
 		
 		// The actual work is performed by the register() instance method.
 		mInstance.register(credentialsToken, customParams);
+        }
+
+        private static void outputLogMessage() {
+                if (SponsorPayLogger.isLogging()) {
+                        SponsorPayLogger.i(TAG, "Only devices running Android API level 10 and above are supported");
+                } else {
+                        Log.i(TAG, "Only devices running Android API level 10 and above are supported");
+                }
 	}
 	
 }

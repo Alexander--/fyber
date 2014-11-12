@@ -6,14 +6,15 @@
 
 package com.sponsorpay.publisher.interstitial;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
+import java.util.Iterator;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.os.AsyncTask;
 
 import com.sponsorpay.credentials.SPCredentials;
-import com.sponsorpay.utils.SPHttpClient;
+import com.sponsorpay.utils.SPHttpConnection;
 import com.sponsorpay.utils.SponsorPayBaseUrlProvider;
 import com.sponsorpay.utils.SponsorPayLogger;
 import com.sponsorpay.utils.StringUtils;
@@ -21,7 +22,7 @@ import com.sponsorpay.utils.UrlBuilder;
 
 /**
  * <p> 
- * Internal class dispatches the intersitital events. 
+ * Internal class dispatches the interstitial events. 
  * </p>
  * 
  * This class is not meant to be used directly. 
@@ -34,8 +35,8 @@ public class SPInterstitialEventDispatcher extends AsyncTask<UrlBuilder, Void, B
 	private static final int SUCCESSFUL_HTTP_STATUS_CODE = 200;
 	
 	// those values are hardcoded for now
-	private static String[] additionalParamKey = {"platform", "ad_format", "client", "rewarded"};
-	private static String[] additionalParamValues = {"android", "interstitial", "sdk", "0"};
+        private static String[] additionalParamKey = {"ad_format", "rewarded"};
+        private static String[] additionalParamValues = {"interstitial", "0"};
 
 	public static void trigger(SPCredentials credentials, String requestId,
 			SPInterstitialAd ad, SPInterstitialEvent event) {
@@ -67,9 +68,31 @@ public class SPInterstitialEventDispatcher extends AsyncTask<UrlBuilder, Void, B
 		if (ad != null) {
 			builder.addKeyValue("ad_id", ad.getAdId())
 			.addKeyValue("provider_type", ad.getProviderType());
+                        
+                        JSONObject trackingParameters = ad.getTrackingParameters();
+                        if (trackingParameters != null) {
+                                appendTrackingParametersToURL(builder, trackingParameters);
+                        }
+                        
 		}
 		return builder;
 	}
+
+        private static void appendTrackingParametersToURL(UrlBuilder builder, JSONObject trackingParameters) {
+                Iterator<?> keys = trackingParameters.keys();
+                while (keys.hasNext()) {
+                        String key = (String) keys.next();
+                        Object value = null;
+                        try {
+                                value = trackingParameters.get(key);
+                                if (value != null) {
+                                        builder.addKeyValue(key, value.toString());
+                                }
+                        } catch (JSONException exception) {
+                                SponsorPayLogger.e(TAG, exception.getMessage());
+                        }
+                }
+        }
 
 	private static String getBaseUrl() {
 		return SponsorPayBaseUrlProvider.getBaseUrl(TRACKERL_URL_KEY);
@@ -87,19 +110,8 @@ public class SPInterstitialEventDispatcher extends AsyncTask<UrlBuilder, Void, B
 		
 		SponsorPayLogger.d(TAG, "Sending event to "+ url);
 
-		HttpGet httpRequest = new HttpGet(url);
-		HttpClient httpClient = SPHttpClient.getHttpClient();
-
 		try {
-			HttpResponse httpResponse = httpClient.execute(httpRequest);
-
-			// We're not parsing the response, just making sure that a successful status code has
-			// been received.
-			int responseStatusCode = httpResponse.getStatusLine().getStatusCode();
-			
-			httpResponse.getEntity().consumeContent();
-			
-			returnValue = responseStatusCode == SUCCESSFUL_HTTP_STATUS_CODE;
+                        returnValue = SPHttpConnection.getConnection(url).open().getResponseCode() == SUCCESSFUL_HTTP_STATUS_CODE;
 		} catch (Exception e) {
 			SponsorPayLogger.e(TAG,
 					"An exception occurred when trying to send advertiser callback: " + e);

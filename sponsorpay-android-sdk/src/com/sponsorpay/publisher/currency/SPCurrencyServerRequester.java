@@ -3,25 +3,18 @@
  *
  * Copyright 2011 - 2014 SponsorPay. All rights reserved.
  */
-
 package com.sponsorpay.publisher.currency;
-import java.util.Locale;
+
 import java.util.Map;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.json.JSONObject;
 
 import android.os.AsyncTask;
 
 import com.sponsorpay.credentials.SPCredentials;
 import com.sponsorpay.publisher.currency.SPCurrencyServerRequester.SPCurrencyServerReponse;
-import com.sponsorpay.utils.HttpResponseParser;
-import com.sponsorpay.utils.SPHttpClient;
-import com.sponsorpay.utils.SignatureTools;
+import com.sponsorpay.utils.SignedResponseRequester;
+import com.sponsorpay.utils.SignedServerResponse;
 import com.sponsorpay.utils.SponsorPayBaseUrlProvider;
 import com.sponsorpay.utils.SponsorPayLogger;
 import com.sponsorpay.utils.StringUtils;
@@ -29,12 +22,13 @@ import com.sponsorpay.utils.UrlBuilder;
 
 /**
  * <p>
- * Requests and loads a resource using the HTTP GET method in the background. Will call the
- * {@link SPVCSResultListener} registered in the constructor in the same thread
- * which triggered the request / loading process. Uses the Android {@link AsyncTask} mechanism.
+ * Requests and loads a resource using the HTTP GET method in the background by using
+ * the AsyncTaskRequester doInBackground method (Uses the Android {@link AsyncTask} 
+ * mechanism.). Will call the {@link SPVCSResultListener} registered in the 
+ * constructor in the same thread which triggered the request / loading process.
  * </p>
  */
-public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCurrencyServerReponse> {
+public class SPCurrencyServerRequester extends SignedResponseRequester<SPCurrencyServerReponse> {
 
 	/*
 	 * VCS API Resource URLs.
@@ -42,6 +36,9 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 	private static final String VCS_URL_KEY = "vcs";
 	
 	private static final String URL_PARAM_KEY_LAST_TRANSACTION_ID = "ltid";
+        
+        public static String TAG = "SPCurrencyServerRequester";
+        
 	/*
 	 * JSON keys used to enclose error information.
 	 */
@@ -52,6 +49,9 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 	 */
 	private static final String DELTA_OF_COINS_KEY = "delta_of_coins";
 	private static final String LATEST_TRANSACTION_ID_KEY = "latest_transaction_id";	
+        private static final String CURRENCY_ID_KEY = "currency_id";
+        private static final String CURRENCY_NAME_KEY = "currency_name";
+        private static final String IS_DEFAULT_KEY = "is_default";
 
 	public interface SPVCSResultListener {
 		public void onSPCurrencyServerResponseReceived(SPCurrencyServerReponse response);
@@ -61,42 +61,38 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 
 	}
 	
-	public static void requestCurrency(SPVCSResultListener listener,
-			SPCredentials credentials, String transactionId,
+        /**
+         * Method which is being used to request new currency based on the currency
+         * id that is provided as a parameter. In case that only the default needs
+         * to be requested call the method: requestCurrency(SPVCSResultListener
+         * listener, SPCredentials credentials, String transactionId, Map<String,
+         * String> customParameters)
+         */
+        public static void requestCurrency(SPVCSResultListener listener, SPCredentials credentials, String transactionId, String currencyId,
 			Map<String, String> customParameters) {
 
+                buildUrlAndMakeServerRequest(listener, credentials, transactionId, currencyId, customParameters);
+        }
+
+        private static void buildUrlAndMakeServerRequest(SPVCSResultListener listener, SPCredentials credentials,
+                        String transactionId, String currencyId, Map<String, String> customParameters) {
+
+                if (StringUtils.nullOrEmpty(transactionId)) {
+                        transactionId = URL_PARAM_KEY_LAST_TRANSACTION_ID;
+                }
 		String baseUrl = SponsorPayBaseUrlProvider.getBaseUrl(VCS_URL_KEY);
 		UrlBuilder urlBuilder = UrlBuilder.newBuilder(baseUrl, credentials)
 				.addKeyValue(URL_PARAM_KEY_LAST_TRANSACTION_ID, transactionId)
 				.addExtraKeysValues(customParameters)
 				.addScreenMetrics()
 				.addSignature();
-		new SPCurrencyServerRequester(listener, credentials.getSecurityToken()).execute(urlBuilder);
-	}
 
+                if (StringUtils.notNullNorEmpty(currencyId)) {
+                        urlBuilder.addKeyValue(CURRENCY_ID_KEY, currencyId);
+                }
 
-	public static String TAG = "SPCurrencyServerRequester";
-
-	/**
-	 * Key of the User-Agent header sent on background requests.
-	 */
-	private static String USER_AGENT_HEADER_NAME = "User-Agent";
-
-	/**
-	 * Key of the Accept-Language header sent on background requests.
-	 */
-	private static String ACCEPT_LANGUAGE_HEADER_NAME = "Accept-Language";
-
-	/**
-	 * Value of the User-Agent header sent on background requests.
-	 */
-	private static String USER_AGENT_HEADER_VALUE = "Android";
-
-	/**
-	 * Custom SponsorPay HTTP header containing the signature of the response.
-	 */
-	private static final String SIGNATURE_HEADER = "X-Sponsorpay-Response-Signature";
-
+                new SPCurrencyServerRequester(listener, credentials.getSecurityToken()).execute(urlBuilder);
+        }
 
 	/**
 	 * Registered {@link AsyncRequestResultListener} to be notified of the request's results when
@@ -123,53 +119,6 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 	}
 
 	/**
-	 * Performs the request in the background. Called by the parent {@link AsyncTask} when
-	 * {@link #requestCurrency(SPVCSResultListener, SPCredentials, String, Map)} is invoked.
-	 * 
-	 */
-	@Override
-	protected SPCurrencyServerReponse doInBackground(UrlBuilder... params) {
-		Thread.currentThread().setName(TAG);
-		
-		String requestUrl = params[0].buildUrl();
-		
-		SponsorPayLogger.d(getClass().getSimpleName(), "Delta of coins request will be sent to URL + params: "
-				+ requestUrl);
-		
-		HttpUriRequest request = new HttpGet(requestUrl);
-		request.addHeader(USER_AGENT_HEADER_NAME, USER_AGENT_HEADER_VALUE);
-
-		String acceptLanguageHeaderValue = makeAcceptLanguageHeaderValue();
-		
-		request.addHeader(ACCEPT_LANGUAGE_HEADER_NAME, acceptLanguageHeaderValue);
-
-		HttpClient client = SPHttpClient.getHttpClient();
-		
-		try {
-			HttpResponse response = client.execute(request);
-			int statusCode = response.getStatusLine().getStatusCode();
-			String responseBody = HttpResponseParser.extractResponseString(response);
-			Header[] responseSignatureHeaders = response.getHeaders(SIGNATURE_HEADER);
-			String responseSignature = responseSignatureHeaders.length > 0 ? responseSignatureHeaders[0]
-					.getValue() : StringUtils.EMPTY_STRING;
-					
-			SponsorPayLogger.d(getClass().getSimpleName(), String.format(
-					"Currency Server Response, status code: %d, response body: %s, signature: %s",
-					statusCode, responseBody, responseSignature));
-			
-			return parseResponse(statusCode, responseBody, responseSignature);
-		} catch (Throwable t) {
-			SponsorPayLogger.e(TAG, "Exception triggered when executing request: " + t);
-
-			SPCurrencyServerErrorResponse errorResponse = new SPCurrencyServerErrorResponse(
-					SPCurrencyServerRequestErrorType.ERROR_NO_INTERNET_CONNECTION,
-					null, t.getMessage());
-			
-			return errorResponse;
-		}
-	}
-	
-	/**
 	 * Performs a second-stage error checking, parses the response and invokes the relevant method
 	 * of the registered listener.
 	 * @param statusCode 
@@ -180,13 +129,14 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 	 *            Security token used to verify the authenticity of the response.
 	 */
 	private SPCurrencyServerReponse parseResponse(int statusCode, String responseBody, String responseSignature) {
+                SignedServerResponse signedServerResponse = new SignedServerResponse(statusCode, responseBody, responseSignature);
+                
 		if (hasErrorStatusCode(statusCode)) {
 			return parseErrorResponse(responseBody);
-		} else if (!verifySignature(responseBody, responseSignature)) {
+                } else if (!verifySignature(signedServerResponse, mSecurityToken)) {
 			return new SPCurrencyServerErrorResponse(
 				SPCurrencyServerRequestErrorType.ERROR_INVALID_RESPONSE_SIGNATURE,
-				null,
-				"The signature received in the request did not match the expected one");
+                                null, "The signature received in the request did not match the expected one");
 		} else {
 			return parseSuccessfulResponse(responseBody);
 		}
@@ -209,8 +159,8 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 			errorMessage = jsonResponse.getString(ERROR_MESSAGE_KEY);
 			errorType = SPCurrencyServerRequestErrorType.SERVER_RETURNED_ERROR;
 		} catch (Exception e) {
-			SponsorPayLogger.w(getClass().getSimpleName(),
-					"An exception was triggered while parsing error response", e);
+                        SponsorPayLogger.w(TAG, "An exception was triggered while parsing error response", e);
+
 			errorType = SPCurrencyServerRequestErrorType.ERROR_OTHER;
 			errorMessage = e.getMessage();
 		}
@@ -222,7 +172,11 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 			JSONObject jsonResponse = new JSONObject(responseBody);
 			double deltaOfCoins = jsonResponse.getDouble(DELTA_OF_COINS_KEY);
 			String latestTransactionId = jsonResponse.getString(LATEST_TRANSACTION_ID_KEY);
-			return new SPCurrencyServerSuccesfulResponse(deltaOfCoins, latestTransactionId);
+                        String currencyId = jsonResponse.getString(CURRENCY_ID_KEY);
+                        String currencyName = jsonResponse.getString(CURRENCY_NAME_KEY);
+                        boolean idDefault= jsonResponse.getBoolean(IS_DEFAULT_KEY);
+                        
+                        return new SPCurrencyServerSuccessfulResponse(deltaOfCoins, latestTransactionId, currencyId, currencyName, idDefault);
 		} catch (Exception e) {
 			SPCurrencyServerRequestErrorType errorType = SPCurrencyServerRequestErrorType.ERROR_INVALID_RESPONSE;
 			String errorMessage = e.getMessage();
@@ -230,62 +184,42 @@ public class SPCurrencyServerRequester extends AsyncTask<UrlBuilder, Void, SPCur
 		}
 	}
 	
-	
-
 	/**
-	 * Verify calculate the signature of the response with the provided security token and compare
-	 * it against the server-provided response signature.
-	 * @param responseBody 
-	 * @param responseSignature 
+         * Called in the original thread when a response from the server is available. Notifies the
+         * request result listener.
 	 * 
-	 * @param securityToken
-	 *            Security token which will be used to calculate the signature.
-	 * @return true if the calculated signature matches the server-provided signature. false
-	 *         otherwise.
+         * @param result
 	 */
-	private boolean verifySignature(String responseBody, String responseSignature) {
-		String generatedSignature = SignatureTools.generateSignatureForString(responseBody,
-				mSecurityToken);
-		return generatedSignature.equals(responseSignature);
+        @Override
+        protected void onPostExecute(SPCurrencyServerReponse result) {
+                mResultListener.onSPCurrencyServerResponseReceived(result);
 	}
 
-	/**
-	 * Returns true if the response contains an HTTP status code out of the 200s.
-	 * @param responseStatusCode 
-	 * 
-	 * @return false if HTTP status code is between 200 and 299. True otherwise.
-	 */
-	private boolean hasErrorStatusCode(int responseStatusCode) {
-		return responseStatusCode < 200 || responseStatusCode > 299;
+        @Override
+        protected String getTag() {
+                return TAG;
 	}
 	
-	/**
-	 * Returns a value for the HTTP Accept-Language header based on the current locale set up for
-	 * the device.
-	 */
-	private String makeAcceptLanguageHeaderValue() {
-		String preferredLanguage = Locale.getDefault().getLanguage();
+        @Override
+        protected SPCurrencyServerReponse parsedSignedResponse(SignedServerResponse signedServerResponse) {
+                SPCurrencyServerReponse response = null;
 
-		String acceptLanguageLocaleValue = preferredLanguage;
-		final String englishLanguageCode = Locale.ENGLISH.getLanguage();
+                if (signedServerResponse != null) {
+                        response = parseResponse(signedServerResponse.getStatusCode(), signedServerResponse.getResponseBody(), 
+                                        signedServerResponse.getResponseSignature());
+                }
 
-		if (StringUtils.nullOrEmpty(preferredLanguage)) {
-			acceptLanguageLocaleValue = englishLanguageCode;
-		} else if (!englishLanguageCode.equals(preferredLanguage)) {
-			acceptLanguageLocaleValue += String.format(", %s;q=0.8", englishLanguageCode);
+                if (response == null) {
+                        response = new SPCurrencyServerErrorResponse(SPCurrencyServerRequestErrorType.ERROR_OTHER,
+                                        StringUtils.EMPTY_STRING, "Unknow error");
 		}
-		return acceptLanguageLocaleValue;
+
+                return response;
 	}
 
-	/**
-	 * Called in the original thread when a response from the server is available. Notifies the
-	 * request result listener.
-	 * 
-	 * @param result
-	 */
 	@Override
-	protected void onPostExecute(SPCurrencyServerReponse result) {
-		mResultListener.onSPCurrencyServerResponseReceived(result);
+        protected SPCurrencyServerReponse noConnectionResponse(Throwable t) {
+                return new SPCurrencyServerErrorResponse(SPCurrencyServerRequestErrorType.ERROR_NO_INTERNET_CONNECTION, null, t.getMessage());
 	}
 
 }

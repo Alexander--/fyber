@@ -25,6 +25,10 @@ import android.view.WindowManager;
  */
 public class SPBrandEngageActivity extends Activity implements SPBrandEngageClientStatusListener {
 	
+        private static final String PENDING_CLOSE_KEY_BUNDLE = "PENDING_CLOSE";
+        private static final String ENGAGMENT_ALREADY_CLOSE_KEY_BUNDLE = "ENGAGMENT_ALREADY_CLOSE";
+        private static final String PLAY_THROUGH_MEDIATION_KEY_BUNDLE = "PLAY_THROUGH_MEDIATION";
+        
 	//used to prevent the activity closed after a redirect
 	private boolean mPendingClose = false;
 	
@@ -37,19 +41,23 @@ public class SPBrandEngageActivity extends Activity implements SPBrandEngageClie
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+                if (savedInstanceState != null) {
+                        mPendingClose = savedInstanceState.getBoolean(PENDING_CLOSE_KEY_BUNDLE);
+                        mEngagementAlreadyClosed = savedInstanceState.getBoolean(ENGAGMENT_ALREADY_CLOSE_KEY_BUNDLE);
+                        mPlayThroughMediation = savedInstanceState.getBoolean(PLAY_THROUGH_MEDIATION_KEY_BUNDLE);
+                } else {
+                        mPlayThroughMediation = SPBrandEngageClient.INSTANCE.playThroughMediation();
+                }
+
 		getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 		
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-	            WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		
 		// Screen orientation locked to landscape on Gingerbread
-		mPlayThroughMediation = SPBrandEngageClient.INSTANCE.playThroughMediation();
-		if ( !mPlayThroughMediation &&
-				(Build.VERSION.SDK_INT == 9 || Build.VERSION.SDK_INT == 10)) {
-			setRequestedOrientation(
-					   ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                if (!mPlayThroughMediation && Build.VERSION.SDK_INT == 10) {
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		}
 		
 		SPBrandEngageClient.INSTANCE.setStatusListener(this);
@@ -74,6 +82,14 @@ public class SPBrandEngageActivity extends Activity implements SPBrandEngageClie
 		}
 	}
 	
+        @Override
+        protected void onSaveInstanceState(Bundle outState) {
+                super.onSaveInstanceState(outState);
+                outState.putBoolean(PENDING_CLOSE_KEY_BUNDLE, mPendingClose);
+                outState.putBoolean(ENGAGMENT_ALREADY_CLOSE_KEY_BUNDLE, mEngagementAlreadyClosed);
+                outState.putBoolean(PLAY_THROUGH_MEDIATION_KEY_BUNDLE, mPlayThroughMediation);
+        }
+        
 	private void closeActivity() {
 		mEngagementAlreadyClosed = true; 
 		finish();

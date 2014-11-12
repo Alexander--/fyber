@@ -10,11 +10,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,8 +17,8 @@ import org.json.JSONObject;
 import android.os.AsyncTask;
 
 import com.sponsorpay.credentials.SPCredentials;
-import com.sponsorpay.utils.HttpResponseParser;
-import com.sponsorpay.utils.SPHttpClient;
+import com.sponsorpay.utils.HostInfo;
+import com.sponsorpay.utils.SPHttpConnection;
 import com.sponsorpay.utils.SponsorPayBaseUrlProvider;
 import com.sponsorpay.utils.SponsorPayLogger;
 import com.sponsorpay.utils.StringUtils;
@@ -47,7 +42,9 @@ public class SPInterstitialRequester extends AsyncTask<UrlBuilder, Void, SPInter
 		UrlBuilder urlBuilder = UrlBuilder.newBuilder(getBaseUrl(), credentials)
 				.addExtraKeysValues(customParameters)
 				.addKeyValue(SPInterstitialClient.SP_REQUEST_ID_PARAMETER_KEY, requestId)
-				.addScreenMetrics();
+                                .addScreenMetrics()
+                                .addScreenOrientation();
+
 		new SPInterstitialRequester().execute(urlBuilder);
 	}
 	
@@ -63,37 +60,50 @@ public class SPInterstitialRequester extends AsyncTask<UrlBuilder, Void, SPInter
 		Thread.currentThread().setName(TAG);
 		LinkedList<SPInterstitialAd> interstitialAds = new LinkedList<SPInterstitialAd>();
 		try {
-			HttpClient httpClient = SPHttpClient.getHttpClient();
 			String requestUrl = params[0].buildUrl();
 			SponsorPayLogger.d(TAG, "Querying URL: " + requestUrl);
-			HttpUriRequest request = new HttpGet(requestUrl);
-			HttpResponse response = httpClient.execute(request);
 	
-			String bodyContent = HttpResponseParser.extractResponseString(response);
+                        String bodyContent = SPHttpConnection.getConnection(requestUrl).open().getBodyContent();
 			
 			//parsing offers
 			if (StringUtils.notNullNorEmpty(bodyContent)) {
+                                HostInfo hostInfo = HostInfo.getHostInfo(null);
+                                String screenOrientation = hostInfo.getScreenOrientation();
 				SponsorPayLogger.d(TAG, "Parsing ads reponse\n" + bodyContent);
 				try {
 					JSONObject json = new JSONObject(bodyContent);
 					JSONArray ads = json.getJSONArray("ads");
 					for (int i = 0 ; i < ads.length() ; i++) {
-						JSONObject ad = ads.getJSONObject(i);
-						String providerType = ad.getString("provider_type");
-						String adId = ad.getString("ad_id");
+                                                JSONObject jsonAd = ads.getJSONObject(i);
+                                                String providerType = jsonAd.getString("provider_type");
+                                                String adId = jsonAd.getString("ad_id");
+                                                JSONObject trackingParameters= jsonAd.optJSONObject("tracking_params");
+                                                SPInterstitialAd ad = new SPInterstitialAd(providerType, adId, trackingParameters);
 
-						interstitialAds.add(new SPInterstitialAd(
-								providerType, adId));
+                                                JSONArray names = jsonAd.names();
+                                                for (int j = 0 ; j < names.length() ; j++) {
+                                                        String key = names.getString(j);
+                                                        if (!(key.equals("ad_id") || (key.equals("provider_type")|| (key.equals("tracking_params"))))) {
+                                                                ad.setContextData(key, jsonAd.getString(key));
+                                                        }
+                                                }
+                                                
+                                                if (!ad.getContextData().containsKey("orientation")){
+                                                        ad.getContextData().put("orientation", screenOrientation);
+                                                }
+                                                
+                                                int rotation = hostInfo.getRotation();
+                                                ad.getContextData().put("rotation", Integer.toString(rotation));
+                                                
+                                                interstitialAds.add(ad);
 		
 					}
 				} catch (JSONException e) {
 					SponsorPayLogger.e(TAG, e.getMessage(), e);;
 				}
 			}
-		} catch (ClientProtocolException e) {
-			SponsorPayLogger.e(TAG, e.getMessage(), e);;
 		} catch (IOException e) {
-			SponsorPayLogger.e(TAG, e.getMessage(), e);;
+                        SponsorPayLogger.e(TAG, e.getMessage(), e);
 		}
 		
 		return interstitialAds.toArray(new SPInterstitialAd[interstitialAds.size()]);

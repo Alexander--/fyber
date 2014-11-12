@@ -6,18 +6,28 @@
 
 package com.sponsorpay;
 
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
+import android.webkit.CookieSyncManager;
 
 import com.sponsorpay.advertiser.SponsorPayAdvertiser;
 import com.sponsorpay.credentials.SPCredentials;
-import com.sponsorpay.mediation.SPMediationCoordinator;
+import com.sponsorpay.mediation.SPMediationConfigurationRequester;
 import com.sponsorpay.utils.HostInfo;
+import com.sponsorpay.utils.SDKFeaturesProvider;
+import com.sponsorpay.utils.SponsorPayParametersProvider;
+import com.sponsorpay.utils.SponsorPayLogger;
 import com.sponsorpay.utils.StringUtils;
+import com.sponsorpay.utils.cookies.PersistentHttpCookieStore;
 
 
 /**
@@ -32,12 +42,14 @@ import com.sponsorpay.utils.StringUtils;
  *
  */
 public class SponsorPay {
-	public static final int MAJOR_RELEASE_NUMBER = 6;
-	public static final int MINOR_RELEASE_NUMBER = 1;
-	public static final int BUGFIX_RELEASE_NUMBER = 2;
+        public static final int MAJOR_RELEASE_NUMBER = 7;
+        public static final int MINOR_RELEASE_NUMBER = 0;
+        public static final int BUGFIX_RELEASE_NUMBER = 0;
 	public static final String RELEASE_VERSION_STRING = MAJOR_RELEASE_NUMBER + "." + 
 				MINOR_RELEASE_NUMBER + "." + BUGFIX_RELEASE_NUMBER;
 	
+        public static final String TAG = "SponsorPay";
+        
 	protected static SponsorPay INSTANCE = new SponsorPay();
 	
 	private HashMap<String, SPCredentials> tokensMap = new HashMap<String, SPCredentials>();
@@ -46,6 +58,7 @@ public class SponsorPay {
 	private HostInfo mHostInfo;
 	
 	protected SponsorPay() {
+                SponsorPayParametersProvider.addParametersProvider(new SDKFeaturesProvider());
 	}
 
 	private SPCredentials getCredentialsFromToken(String token) {
@@ -124,18 +137,24 @@ public class SponsorPay {
 	 */
 	public static String start(String appId, String userId,
 			String securityToken, Activity activity) {
+                
 		Set<String> credentials = new HashSet<String>(SponsorPay.getAllCredentials());
 		Context context = activity.getApplicationContext();
-		if (credentials.isEmpty()) {
+
+                String credentialsToken = INSTANCE.getCredentialsToken(appId, userId, securityToken,
+                                                context);
+        if (credentials.isEmpty()) {
 			HostInfo.getHostInfo(context);
-			SPMediationCoordinator.INSTANCE.startMediationAdapters(activity);
+                                CookieSyncManager.createInstance(activity);
+                                CookieStore store = new PersistentHttpCookieStore(activity);
+                                CookieManager cookieManager = new CookieManager(store,CookiePolicy.ACCEPT_ORIGINAL_SERVER);
+                                CookieHandler.setDefault(cookieManager);
+                                SPMediationConfigurationRequester.requestConfig(INSTANCE.currentCredentials, activity);
 		}
-		String credentialsToken = INSTANCE.getCredentialsToken(appId, userId, securityToken,
-						context);
-		
 		if (!credentials.contains(credentialsToken)) {
 			SponsorPayAdvertiser.register(context);
 		}
+                
 		return credentialsToken;
 	}
 
