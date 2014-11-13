@@ -55,7 +55,7 @@ public class ActivityOfferWebClient extends SPWebClient {
 				+ ", will close activity: " + willCloseHostActivity);
 
 		if (willCloseHostActivity) {
-			hostActivity.finish();
+			// hostActivity.finish();
 		}
 	}
 
