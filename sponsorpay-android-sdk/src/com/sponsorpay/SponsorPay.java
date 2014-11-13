@@ -50,7 +50,7 @@ public class SponsorPay {
 
         public static final String TAG = "SponsorPay";
         
-	protected static SponsorPay INSTANCE = new SponsorPay();
+	public static SponsorPay INSTANCE = new SponsorPay();
 	
 	private HashMap<String, SPCredentials> tokensMap = new HashMap<String, SPCredentials>();
 	
@@ -155,10 +155,6 @@ public class SponsorPay {
 		}
                 
 		return credentialsToken;
-	}
-
-	public static HostInfo getHostInfo() {
-		return INSTANCE.mHostInfo;
 	}
 	
 	/**
