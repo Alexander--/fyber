@@ -186,9 +186,9 @@ public abstract class SPWebClient extends WebViewClient {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
-                                if(getHostActivity() != null) {
+                                /*if(getHostActivity() != null) {
                                         getHostActivity().finish();
-                                }
+                                }*/
 			}
 		});
 		AlertDialog dialog = dialogBuilder.create();
